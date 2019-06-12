@@ -1,0 +1,27 @@
+## `msgid`s in this file come from POT (.pot) files.
+##
+## Do not add, change, or remove `msgid`s manually here as
+## they're tied to the ones in the corresponding POT file
+## (with the same domain).
+##
+## Use `mix gettext.extract --merge` or `mix gettext.merge`
+## to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: fr\n"
+"Plural-Forms: nplurals=2\n"
+
+#, elixir-format
+#: lib/ex_css_captcha.ex:169
+msgid "has expired"
+msgstr "a expiré"
+
+#, elixir-format
+#: lib/ex_css_captcha/default_renderer.ex:8
+msgid "Copy the following code in the field below"
+msgstr "Recopiez le code suivant dans le champ ci-après"
+
+#, elixir-format
+#: lib/ex_css_captcha.ex:176
+msgid "is invalid"
+msgstr "est invalide"
