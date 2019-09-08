@@ -9,8 +9,6 @@ defmodule ExCSSCaptcha.Challenge do
       |> Enum.map(
         fn _ ->
           Enum.random(options.alphabet)
-          |> ExCSSCaptcha.Table.map()
-          |> Enum.random()
         end
       ),
       fakes: range
@@ -21,8 +19,6 @@ defmodule ExCSSCaptcha.Challenge do
           {
             offset,
             Enum.random(options.alphabet)
-            |> ExCSSCaptcha.Table.map()
-            |> Enum.random()
           }
         end
       )
@@ -81,7 +77,7 @@ defmodule ExCSSCaptcha.Challenge do
     lines = characters
     |> Enum.map(
       fn {char, index} ->
-        content = [char]
+        content = [ExCSSCaptcha.Table.map(char, options.unicode_version)]
         |> generate_noise(options)
         |> Enum.reverse()
         |> generate_noise(options)

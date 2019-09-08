@@ -6,7 +6,6 @@ defmodule ExCSSCaptcha do
   @defaults [
     alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
     reversed: false,
-    #unicode_version: ?,
     noise_length: 2,
     challenge_length: 8,
     fake_characters_length: 2,
@@ -15,6 +14,7 @@ defmodule ExCSSCaptcha do
     html_wrapper_id: :captcha,
     html_letter_tag: :span,
     html_wrapper_tag: :div,
+    unicode_version: :ascii,
     #fake_characters_style: "display: none",
     significant_characters_style: "",
     renderer: ExCSSCaptcha.DefaultRenderer,

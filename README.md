@@ -32,6 +32,7 @@ config :ex_css_captcha,
   reversed: false,
   noise_length: 2,
   challenge_length: 8,
+  unicode_version: :ascii,
   significant_characters_color: nil,
   html_wrapper_id: :captcha,
   html_letter_tag: :span,
@@ -51,6 +52,7 @@ Where:
 * html_wrapper_tag (atom or string): HTML tag name of container element
 * html_letter_tag (atom or string): HTML tag to display challenge (and fake) characters
 * significant_characters_style (string): fragment of CSS code to append to significant characters of the challenge
+* unicode_version (atom, one of `:ascii`, `:unicode_1_1_0`, `:unicode_2_0_0`, `:unicode_3_0_0`, `:unicode_3_1_0`, `:unicode_3_2_0`, `:unicode_4_0_0`, `:unicode_4_1_0`, `:unicode_5_0_0`, `:unicode_5_1_0`, `:unicode_5_2_0`, `:unicode_6_0_0`): the Unicode version from which to pick characters
 * renderer (module): a module implementing `ExCSSCaptcha.Renderer` behaviour to customize HTML output for the captcha (see `ExCSSCaptcha.DefaultRenderer` for an example)
 
 ## Usage
