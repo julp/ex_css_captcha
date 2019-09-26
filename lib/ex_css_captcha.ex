@@ -67,7 +67,7 @@ defmodule ExCSSCaptcha do
   def validate_captcha(changeset = %Ecto.Changeset{valid?: false}), do: changeset
   def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => captcha1, "captcha2" => captcha2}}) do
     import ExCSSCaptcha.Gettext
-    #captcha1 = String.downcase(captcha1)
+    captcha1 = String.downcase(captcha1)
     with(
       {:ok, data} when is_binary(data) <- decrypt(captcha2),
       [@pepper, ^captcha1, datetime, hash] <- String.split(data, @separator),
