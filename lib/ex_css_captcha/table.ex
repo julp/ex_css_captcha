@@ -1,5 +1,6 @@
 defmodule ExCSSCaptcha.Table do
-  @table <<0x0030::32, 0x2070::32, 0x2080::32, 0x24EA::32, 0xFF10::32, 0x01D7CE::32, 0x01D7D8::32, 0x01D7E2::32, 0x01D7EC::32, 0x01D7F6::32, 0x0031::32, 0x00B9::32, 0x2081::32, 0x2460::32,
+  @table <<
+    0x0030::32, 0x2070::32, 0x2080::32, 0x24EA::32, 0xFF10::32, 0x01D7CE::32, 0x01D7D8::32, 0x01D7E2::32, 0x01D7EC::32, 0x01D7F6::32, 0x0031::32, 0x00B9::32, 0x2081::32, 0x2460::32,
     0xFF11::32, 0x01D7CF::32, 0x01D7D9::32, 0x01D7E3::32, 0x01D7ED::32, 0x01D7F7::32, 0x0032::32, 0x00B2::32, 0x2082::32, 0x2461::32, 0xFF12::32, 0x01D7D0::32, 0x01D7DA::32,
     0x01D7E4::32, 0x01D7EE::32, 0x01D7F8::32, 0x0033::32, 0x00B3::32, 0x2083::32, 0x2462::32, 0xFF13::32, 0x01D7D1::32, 0x01D7DB::32, 0x01D7E5::32, 0x01D7EF::32, 0x01D7F9::32,
     0x0034::32, 0x2074::32, 0x2084::32, 0x2463::32, 0xFF14::32, 0x01D7D2::32, 0x01D7DC::32, 0x01D7E6::32, 0x01D7F0::32, 0x01D7FA::32, 0x0035::32, 0x2075::32, 0x2085::32, 0x2464::32,
@@ -197,7 +198,8 @@ defmodule ExCSSCaptcha.Table do
     0x0110B3::32, 0x0110B4::32, 0x0110B5::32, 0x0110B6::32, 0x0110B9::32, 0x0110BA::32, 0x065F::32, 0x0859::32, 0x085A::32, 0x085B::32, 0x093A::32, 0x0956::32, 0x0957::32, 0x0F8D::32,
     0x0F8E::32, 0x0F8F::32, 0x135D::32, 0x135E::32, 0x1BE6::32, 0x1BE8::32, 0x1BE9::32, 0x1BED::32, 0x1BEF::32, 0x1BF0::32, 0x1BF1::32, 0x1DFC::32, 0x2D7F::32, 0x011001::32, 0x011038::32,
     0x011039::32, 0x01103A::32, 0x01103B::32, 0x01103C::32, 0x01103D::32, 0x01103E::32, 0x01103F::32, 0x011040::32, 0x011041::32, 0x011042::32, 0x011043::32, 0x011044::32, 0x011045::32,
-    0x011046::32>>
+    0x011046::32
+  >>
 
   defp offset(?0, :ascii), do: {0, 0}
   defp offset(?0, :unicode_1_1_0), do: {0, 4}
@@ -631,10 +633,22 @@ defmodule ExCSSCaptcha.Table do
   defp offset(?z, :unicode_5_1_0), do: {1490, 1534}
   defp offset(?z, :unicode_5_2_0), do: {1490, 1534}
   defp offset(?z, :unicode_6_0_0), do: {1490, 1535}
+  defp offset(?\s, :ascii), do: {1536, 1538}
+  defp offset(?\s, :unicode_1_1_0), do: {1536, 1575}
+  defp offset(?\s, :unicode_2_0_0), do: {1536, 1575}
+  defp offset(?\s, :unicode_3_0_0), do: {1536, 1579}
+  defp offset(?\s, :unicode_3_1_0), do: {1536, 1579}
+  defp offset(?\s, :unicode_3_2_0), do: {1536, 1581}
+  defp offset(?\s, :unicode_4_0_0), do: {1536, 1582}
+  defp offset(?\s, :unicode_4_1_0), do: {1536, 1583}
+  defp offset(?\s, :unicode_5_0_0), do: {1536, 1583}
+  defp offset(?\s, :unicode_5_1_0), do: {1536, 1584}
+  defp offset(?\s, :unicode_5_2_0), do: {1536, 1585}
+  defp offset(?\s, :unicode_6_0_0), do: {1536, 1585}
 
   def map(digit, version) do
     {s, e} = offset(digit, version)
-    offset = Enum.random(Range.new(s, e))
+    offset = ExCSSCaptcha.random(s, e)
     <<cp::32>> = binary_part(@table, offset * 4, 4)
     cp
   end

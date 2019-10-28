@@ -3,9 +3,9 @@ defmodule ExCSSCaptcha.Color do
 
   defp create(hmin, hmax, smin, smax, lmin, lmax) do
     %__MODULE__{
-      h: Enum.random(Range.new(hmin, hmax)),
-      s: Enum.random(Range.new(smin, smax)),
-      l: Enum.random(Range.new(lmin, lmax)),
+      h: ExCSSCaptcha.random(hmin, hmax),
+      s: ExCSSCaptcha.random(smin, smax),
+      l: ExCSSCaptcha.random(lmin, lmax),
     }
   end
 

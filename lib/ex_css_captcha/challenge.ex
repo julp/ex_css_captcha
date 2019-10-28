@@ -25,12 +25,6 @@ defmodule ExCSSCaptcha.Challenge do
     }
   end
 
-  @noise [ # [\p{Z}\p{Pc}\p{Pd}]
-    0x0020, 0x002D, 0x005F, 0x00A0, 0x05BE, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x2010, 0x2011, 0x2012, 0x2013, 0x2014, 0x2015, 0x2028,
-    0x2029, 0x203F, 0x2040, 0x3000, 0x301C, 0x3030, 0xFE31, 0xFE32, 0xFE33, 0xFE34, 0xFE4D, 0xFE4E, 0xFE4F, 0xFE58, 0xFE63, 0xFF0D, 0xFF3F, 0x058A, 0x1680, 0x1806, 0x202F, 0x205F, 0x30A0,
-    0x2054, 0x2E17, 0x1400, 0x2E1A, 0x2E3A, 0x2E3B, 0x2E40,
-  ]
-
   defp char_to_precision(char) when char > 0xFFFF, do: 6
   defp char_to_precision(_char), do: 4
 
@@ -42,9 +36,10 @@ defmodule ExCSSCaptcha.Challenge do
     #[value | list]
   #end
 
+  defp generate_noise(list, %{noise_length: 0}), do: list
+
   defp generate_noise(list, options) do
-    Range.new(0, options.noise_length)
-    |> Enum.random()
+    ExCSSCaptcha.random(0, options.noise_length)
     |> case do
       # special case for none because Range.new(0, 0) |> Enum.to_list() gives [0]
       # and we finish with one character of noise instead of none
@@ -52,7 +47,7 @@ defmodule ExCSSCaptcha.Challenge do
         list
       length ->
         Range.new(1, length)
-        |> Enum.into(list, fn _ -> Enum.random(@noise) end)
+        |> Enum.into(list, fn _ -> ExCSSCaptcha.Table.map(?\s, options.unicode_version) end)
     end
   end
 

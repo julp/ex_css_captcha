@@ -54,6 +54,21 @@ defmodule ExCSSCaptcha do
     |> Base.encode16()
   end
 
+  @doc ~S"""
+  Generate a random number as [n1;n2]
+  """
+  def random(n, n), do: n
+
+  def random(n1, n2)
+    when is_integer(n1) and is_integer(n2)
+  do
+    :rand.uniform(n2 - n1 + 1) + n1 - 1
+  end
+
+  def random(n1..n2) do
+    random(n1, n2)
+  end
+
   def encrypt_and_sign(challenge) do
     content = [@pepper, challenge, DateTime.utc_now()]
     |> Enum.join(@separator)
