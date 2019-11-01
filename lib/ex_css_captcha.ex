@@ -79,7 +79,25 @@ defmodule ExCSSCaptcha do
     |> encrypt()
   end
 
+  @length 32
+  [captcha, captcha2] = 1..2
+  |> Enum.map(
+    fn _ ->
+      @length
+      |> :crypto.strong_rand_bytes()
+      |> Base.url_encode64()
+      |> binary_part(0, @length)
+    end
+  )
+
+  def bypass_captcha(params) do
+    params
+    |> Map.put("captcha", unquote(captcha))
+    |> Map.put("captcha2", unquote(captcha2))
+  end
+
   def validate_captcha(changeset = %Ecto.Changeset{valid?: false}), do: changeset
+  def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => unquote(captcha), "captcha2" => unquote(captcha2)}}), do: changeset
   def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => captcha1, "captcha2" => captcha2}}) do
     import ExCSSCaptcha.Gettext
     captcha1 = String.downcase(captcha1)
