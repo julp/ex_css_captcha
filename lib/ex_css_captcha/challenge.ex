@@ -70,7 +70,7 @@ defmodule ExCSSCaptcha.Challenge do
     |> Enum.with_index()
 
     lines = characters
-    |> Enum.map(
+    |> Task.async_stream(
       fn {char, index} ->
         content = [ExCSSCaptcha.Table.map(char, options.unicode_version)]
         |> generate_noise(options)
@@ -103,6 +103,7 @@ defmodule ExCSSCaptcha.Challenge do
         ])
       end
     )
+    |> Enum.map(fn {:ok, v} -> v end)
 
     css = characters
     |> handle_reversed(lines, options)
