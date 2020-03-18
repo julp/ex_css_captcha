@@ -90,36 +90,55 @@ defmodule ExCSSCaptcha do
     end
   )
 
+  @doc ~S"""
+  TODO
+  """
   def bypass_captcha(params) do
     params
     |> Map.put("captcha", unquote(captcha))
     |> Map.put("captcha2", unquote(captcha2))
   end
 
-  def validate_captcha(changeset = %Ecto.Changeset{valid?: false}), do: changeset
-  def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => unquote(captcha), "captcha2" => unquote(captcha2)}}), do: changeset
-  def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => captcha1, "captcha2" => captcha2}}) do
+  @doc ~S"""
+  TODO
+  """
+  @spec validate_captcha(user_input :: String.t, private_data :: String.t) :: :ok | {:error, String.t}
+  def validate_captcha(unquote(captcha), unquote(captcha2)), do: :ok
+  def validate_captcha(user_input, private_data) do
     import ExCSSCaptcha.Gettext
-    captcha1 = String.downcase(captcha1)
+    user_input = String.downcase(user_input)
     with(
-      {:ok, data} when is_binary(data) <- decrypt(captcha2),
-      [@pepper, ^captcha1, datetime, hash] <- String.split(data, @separator),
-      ^hash <- [@pepper, captcha1, datetime]
+      {:ok, data} when is_binary(data) <- decrypt(private_data),
+      [@pepper, ^user_input, datetime, hash] <- String.split(data, @separator),
+      ^hash <- [@pepper, user_input, datetime]
       |> Enum.join(@separator)
       |> digest(),
       {:ok, datetime, 0} <- DateTime.from_iso8601(datetime)
     ) do
       if DateTime.diff(DateTime.utc_now(), datetime) > @expires_in do
-        Ecto.Changeset.add_error(changeset, :captcha, dgettext("ex_css_captcha", "has expired"))
+        {:error, dgettext("ex_css_captcha", "has expired")}
       else
-        changeset
+        :ok
       end
     else
       value ->
         require Logger
 
         Logger.debug("captcha validation failed with: #{inspect(value)}")
-        Ecto.Changeset.add_error(changeset, :captcha, dgettext("ex_css_captcha", "is invalid"))
+        {:error, dgettext("ex_css_captcha", "is invalid")}
+    end
+  end
+
+  @doc ~S"""
+  TODO
+  """
+  def validate_captcha(changeset = %Ecto.Changeset{valid?: false}), do: changeset
+  def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => user_input, "captcha2" => private_data}}) do
+    case validate_captcha(user_input, private_data) do
+      :ok ->
+        changeset
+      {:error, reason} ->
+        Ecto.Changeset.add_error(changeset, :captcha, reason)
     end
   end
 end
