@@ -57,6 +57,7 @@ defmodule ExCSSCaptcha do
   @doc ~S"""
   Generate a random number as [n1;n2]
   """
+  @spec random(n1 :: integer, n2 :: integer) :: integer
   def random(n, n), do: n
 
   def random(n1, n2)
@@ -65,6 +66,7 @@ defmodule ExCSSCaptcha do
     :rand.uniform(n2 - n1 + 1) + n1 - 1
   end
 
+  @spec random(n :: Range.t) :: integer
   def random(n1..n2) do
     random(n1, n2)
   end
