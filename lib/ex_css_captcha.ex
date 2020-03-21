@@ -11,13 +11,13 @@ defmodule ExCSSCaptcha do
     noise_length: 2,
     challenge_length: 8,
     fake_characters_length: 2,
-    #fake_characters_color: nil,
+    fake_characters_color: nil,
     significant_characters_color: nil,
     html_wrapper_id: :captcha,
     html_letter_tag: :span,
     html_wrapper_tag: :div,
     unicode_version: :ascii,
-    #fake_characters_style: "display: none",
+    fake_characters_style: "display: none",
     significant_characters_style: "",
     renderer: ExCSSCaptcha.DefaultRenderer,
   ]
@@ -57,16 +57,16 @@ defmodule ExCSSCaptcha do
       html_wrapper_id: atom,
       html_letter_tag: atom,
       html_wrapper_tag: atom,
-      unicode_version: atom, # TODO: :ascii | :unicode_X_Y_Z
-      fake_characters_style: String.t,
-      significant_characters_style: String.t,
+      unicode_version: :ascii | :unicode_1_1_0 | :unicode_2_0_0 | :unicode_3_0_0 | :unicode_3_1_0 | :unicode_3_2_0 | :unicode_4_0_0 | :unicode_4_1_0 | :unicode_5_0_0 | :unicode_5_1_0 | :unicode_5_2_0 | :unicode_6_0_0,
+      fake_characters_style: nil | String.t,
+      significant_characters_style: nil | String.t,
       renderer: module,
       # ----------
       separator: String.t,
       expires_in: pos_integer,
       algorithm: String.t,
       key: binary,
-      pepper: binary
+      pepper: binary,
     }
 
     @doc ~S"""

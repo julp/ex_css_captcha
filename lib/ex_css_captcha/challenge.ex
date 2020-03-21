@@ -1,30 +1,36 @@
 defmodule ExCSSCaptcha.Challenge do
-  defstruct ~W[challenge fakes]a
+  defstruct ~W[challenge digits]a
+
+  @type t :: %__MODULE__{
+    challenge: nonempty_charlist,
+    digits: [{:significant | :irrelevant, char}],
+  }
 
   @doc ~S"""
   TODO
   """
   def create(options \\ []) do
     options = ExCSSCaptcha.options(options)
-    range = Range.new(1, options.challenge_length)
+    digits = Range.new(1, options.challenge_length + options.fake_characters_length)
+    |> Enum.map(
+      fn i ->
+        {if(i <= options.challenge_length, do: :significant, else: :irrelevant), Enum.random(options.alphabet)}
+      end
+    )
+    |> Enum.shuffle()
     %__MODULE__{
-      challenge: range
-      |> Enum.map(
-        fn _ ->
-          Enum.random(options.alphabet)
-        end
-      ),
-      fakes: range
-      |> Enum.to_list()
-      |> Enum.shuffle()
-      |> Enum.take(options.fake_characters_length)
-      |> Enum.into(%{}, fn offset ->
-          {
-            offset,
-            Enum.random(options.alphabet)
-          }
-        end
-      )
+      challenge: digits
+        |> Enum.reduce(
+          [],
+          fn
+            {:significant, character}, acc ->
+              [character | acc]
+            _, acc ->
+              acc
+          end
+        )
+        |> Enum.reverse(),
+      digits: digits,
     }
   end
 
@@ -65,12 +71,23 @@ defmodule ExCSSCaptcha.Challenge do
   end
   defp handle_reversed(_characters, list, _options), do: list
 
-  defp set_color(%{significant_characters_color: :nil}), do: []
-  defp set_color(%{significant_characters_color: color}) do
+
+  defp set_color(:significant, %{significant_characters_color: :nil}), do: []
+  defp set_color(:significant, %{significant_characters_color: color}) do
     color
     |> ExCSSCaptcha.Color.create()
     |> ExCSSCaptcha.Color.format()
   end
+
+  defp set_color(:irrelevant, %{fake_characters_color: :nil}), do: []
+  defp set_color(:irrelevant, %{fake_characters_color: color}) do
+    color
+    |> ExCSSCaptcha.Color.create()
+    |> ExCSSCaptcha.Color.format()
+  end
+
+  def set_style(:irrelevant, options), do: options.fake_characters_style || []
+  def set_style(:significant, options), do: options.significant_characters_style || []
 
   @doc ~S"""
   TODO
@@ -79,28 +96,18 @@ defmodule ExCSSCaptcha.Challenge do
     use Phoenix.HTML
     options = ExCSSCaptcha.options(options)
 
-    characters = challenge.challenge
+    characters = challenge.digits
     |> Enum.with_index()
 
     lines = characters
     |> Task.async_stream(
-      fn {char, index} ->
+      fn {{kind, char}, index} ->
         content = [ExCSSCaptcha.Table.map(char, options.unicode_version)]
         |> generate_noise(options)
         |> Enum.reverse()
         |> generate_noise(options)
         |> Enum.map(&encode_character/1)
         |> Enum.join()
-        if false do
-          _color = case options.significant_characters_color do
-          nil ->
-            []
-          atom ->
-            atom
-            |> ExCSSCaptcha.Color.create()
-            |> ExCSSCaptcha.Color.format()
-          end
-        end
         #"##{options.html_wrapper_id} #{options.html_letter_tag}:nth-child(#{index + 1}):after { content: \"#{content}\"; #{color} #{options.significant_characters_style} }\n"
         IO.iodata_to_binary([
           "#",
@@ -112,9 +119,8 @@ defmodule ExCSSCaptcha.Challenge do
           "):after { content: \"",
           content,
           "\";",
-          #color,
-          set_color(options),
-          options.significant_characters_style,
+          set_color(kind, options),
+          set_style(kind, options),
           "}",
         ])
       end
@@ -126,7 +132,7 @@ defmodule ExCSSCaptcha.Challenge do
     |> Enum.shuffle()
     |> Enum.join("\n")
 
-    html = content_tag(options.html_wrapper_tag, Enum.map(challenge.challenge, fn _ -> content_tag(options.html_letter_tag, "") end), id: options.html_wrapper_id)
+    html = content_tag(options.html_wrapper_tag, Enum.map(challenge.digits, fn _ -> content_tag(options.html_letter_tag, "") end), id: options.html_wrapper_id)
     options.renderer.render(form, ExCSSCaptcha.encrypt_and_sign(challenge.challenge), html, {:safe, css})
   end
 end
