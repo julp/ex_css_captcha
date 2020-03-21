@@ -1,6 +1,9 @@
 defmodule ExCSSCaptcha.Challenge do
   defstruct ~W[challenge fakes]a
 
+  @doc ~S"""
+  TODO
+  """
   def create(options \\ []) do
     options = ExCSSCaptcha.options(options)
     range = Range.new(1, options.challenge_length)
@@ -62,6 +65,16 @@ defmodule ExCSSCaptcha.Challenge do
   end
   defp handle_reversed(_characters, list, _options), do: list
 
+  defp set_color(%{significant_characters_color: :nil}), do: []
+  defp set_color(%{significant_characters_color: color}) do
+    color
+    |> ExCSSCaptcha.Color.create()
+    |> ExCSSCaptcha.Color.format()
+  end
+
+  @doc ~S"""
+  TODO
+  """
   def render(form, challenge = %__MODULE__{}, options \\ []) do
     use Phoenix.HTML
     options = ExCSSCaptcha.options(options)
@@ -78,13 +91,15 @@ defmodule ExCSSCaptcha.Challenge do
         |> generate_noise(options)
         |> Enum.map(&encode_character/1)
         |> Enum.join()
-        color = case options.significant_characters_color do
+        if false do
+          _color = case options.significant_characters_color do
           nil ->
             []
           atom ->
             atom
             |> ExCSSCaptcha.Color.create()
             |> ExCSSCaptcha.Color.format()
+          end
         end
         #"##{options.html_wrapper_id} #{options.html_letter_tag}:nth-child(#{index + 1}):after { content: \"#{content}\"; #{color} #{options.significant_characters_style} }\n"
         IO.iodata_to_binary([
@@ -97,7 +112,8 @@ defmodule ExCSSCaptcha.Challenge do
           "):after { content: \"",
           content,
           "\";",
-          color,
+          #color,
+          set_color(options),
           options.significant_characters_style,
           "}",
         ])

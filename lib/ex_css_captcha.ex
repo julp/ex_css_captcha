@@ -3,6 +3,8 @@ defmodule ExCSSCaptcha do
   Documentation for ExCSSCaptcha.
   """
 
+  import ExCSSCaptcha.Gettext
+
   @defaults [
     alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
     reversed: false,
@@ -19,6 +21,63 @@ defmodule ExCSSCaptcha do
     significant_characters_style: "",
     renderer: ExCSSCaptcha.DefaultRenderer,
   ]
+
+  defmodule Config do
+    defstruct alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
+      reversed: false,
+      noise_length: 2,
+      challenge_length: 8,
+      fake_characters_length: 2,
+      fake_characters_color: nil,
+      significant_characters_color: nil,
+      html_wrapper_id: :captcha,
+      html_letter_tag: :span,
+      html_wrapper_tag: :div,
+      unicode_version: :ascii,
+      fake_characters_style: "display: none",
+      significant_characters_style: "",
+      renderer: ExCSSCaptcha.DefaultRenderer,
+      separator: "/",
+      expires_in: 300, # in seconds
+      algorithm: "AES128GCM",
+      key: :crypto.strong_rand_bytes(32), # (re)generated at compile time
+      pepper: :crypto.strong_rand_bytes(24) # (re)generated at compile time
+
+    @type color :: nil | :red | :green | :blue | :dark | :light
+
+    @type t :: %__MODULE__{
+      alphabet: nonempty_charlist,
+      reversed: nil | boolean,
+      # NOTE: non_neg_integer includes 0 but not pos_integer
+      noise_length: non_neg_integer,
+      challenge_length: pos_integer,
+      fake_characters_length: non_neg_integer,
+      fake_characters_color: color,
+      significant_characters_color: color,
+      html_wrapper_id: atom,
+      html_letter_tag: atom,
+      html_wrapper_tag: atom,
+      unicode_version: atom, # TODO: :ascii | :unicode_X_Y_Z
+      fake_characters_style: String.t,
+      significant_characters_style: String.t,
+      renderer: module,
+      # ----------
+      separator: String.t,
+      expires_in: pos_integer,
+      algorithm: String.t,
+      key: binary,
+      pepper: binary
+    }
+
+    @doc ~S"""
+    TODO
+    """
+    @spec merge(config :: t, options :: Keyword.t) :: t
+    def merge(config = %__MODULE__{}, _options) do
+      # TODO
+      config
+    end
+  end
 
   def options(options) do
     @defaults
@@ -102,12 +161,27 @@ defmodule ExCSSCaptcha do
   end
 
   @doc ~S"""
+  The translated string to display when the captcha is invalid (meaning user answer doesn't match the challenge)
+  """
+  @spec invalid_captcha_message() :: String.t
+  def invalid_captcha_message do
+    dgettext("ex_css_captcha", "is invalid")
+  end
+
+  @doc ~S"""
+  The translated string to display when the captcha has expired
+  """
+  @spec expired_captcha_message() :: String.t
+  def expired_captcha_message do
+    dgettext("ex_css_captcha", "has expired")
+  end
+
+  @doc ~S"""
   TODO
   """
   @spec validate_captcha(user_input :: String.t, private_data :: String.t) :: :ok | {:error, String.t}
   def validate_captcha(unquote(captcha), unquote(captcha2)), do: :ok
   def validate_captcha(user_input, private_data) do
-    import ExCSSCaptcha.Gettext
     user_input = String.downcase(user_input)
     with(
       {:ok, data} when is_binary(data) <- decrypt(private_data),
@@ -118,7 +192,7 @@ defmodule ExCSSCaptcha do
       {:ok, datetime, 0} <- DateTime.from_iso8601(datetime)
     ) do
       if DateTime.diff(DateTime.utc_now(), datetime) > @expires_in do
-        {:error, dgettext("ex_css_captcha", "has expired")}
+        {:error, expired_captcha_message()}
       else
         :ok
       end
@@ -127,7 +201,7 @@ defmodule ExCSSCaptcha do
         require Logger
 
         Logger.debug("captcha validation failed with: #{inspect(value)}")
-        {:error, dgettext("ex_css_captcha", "is invalid")}
+        {:error, invalid_captcha_message()}
     end
   end
 
