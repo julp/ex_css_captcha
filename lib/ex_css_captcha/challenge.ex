@@ -133,6 +133,6 @@ defmodule ExCSSCaptcha.Challenge do
     |> Enum.join("\n")
 
     html = content_tag(options.html_wrapper_tag, Enum.map(challenge.digits, fn _ -> content_tag(options.html_letter_tag, "") end), id: options.html_wrapper_id)
-    options.renderer.render(form, ExCSSCaptcha.encrypt_and_sign(challenge.challenge), html, {:safe, css})
+    options.renderer.render(form, ExCSSCaptcha.encrypt_and_sign(challenge.challenge), html, raw(css))
   end
 end
