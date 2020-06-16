@@ -57,7 +57,7 @@ defmodule ExCSSCaptcha do
       html_wrapper_id: atom,
       html_letter_tag: atom,
       html_wrapper_tag: atom,
-      unicode_version: :ascii | :unicode_1_1_0 | :unicode_2_0_0 | :unicode_3_0_0 | :unicode_3_1_0 | :unicode_3_2_0 | :unicode_4_0_0 | :unicode_4_1_0 | :unicode_5_0_0 | :unicode_5_1_0 | :unicode_5_2_0 | :unicode_6_0_0,
+      unicode_version: ExCSSCaptcha.Table.unicode_version,
       fake_characters_style: nil | String.t,
       significant_characters_style: nil | String.t,
       renderer: module,
@@ -208,6 +208,7 @@ defmodule ExCSSCaptcha do
   @doc ~S"""
   TODO
   """
+  @spec validate_captcha(changeset :: Ecto.Changeset.t) :: Ecto.Changeset.t
   def validate_captcha(changeset = %Ecto.Changeset{valid?: false}), do: changeset
   def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => user_input, "captcha2" => private_data}}) do
     case validate_captcha(user_input, private_data) do
