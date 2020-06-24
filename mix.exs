@@ -11,14 +11,14 @@ defmodule ExCSSCaptcha.MixProject do
       description: description(),
       package: package(),
       name: "ExCSSCaptcha",
-      source_url: "https://github.com/julp/ex_css_captcha"
+      source_url: "https://github.com/julp/ex_css_captcha",
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
     ]
   end
 
@@ -28,7 +28,7 @@ defmodule ExCSSCaptcha.MixProject do
       {:ecto_sql, "~> 3.4"},
       {:gettext, ">= 0.0.0"},
       {:phoenix_html, "~> 2.14"},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false},
     ]
   end
 
@@ -40,7 +40,7 @@ defmodule ExCSSCaptcha.MixProject do
     [
       files: ["lib", "priv", "mix.exs", "README*"],
       licenses: ["BSD"],
-      links: %{"GitHub" => "https://github.com/julp/ex_css_captcha"}
+      links: %{"GitHub" => "https://github.com/julp/ex_css_captcha"},
     ]
   end
 end
