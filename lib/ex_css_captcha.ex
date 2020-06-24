@@ -99,8 +99,11 @@ defmodule ExCSSCaptcha do
   end
 
   def decrypt(payload) do
-    with <<iv::binary-32, tag::binary-16, ct::binary>> <- Base.decode16!(payload) do
-      {:ok, :crypto.block_decrypt(:aes_gcm, @key, iv, {@algorithm, ct, tag})}
+    with(
+      <<iv::binary-32, tag::binary-16, ct::binary>> <- Base.decode16!(payload),
+      data when data != :error <- :crypto.block_decrypt(:aes_gcm, @key, iv, {@algorithm, ct, tag})
+    ) do
+      {:ok, data}
     else
       _ ->
         :error
