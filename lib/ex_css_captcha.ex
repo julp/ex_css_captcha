@@ -86,6 +86,31 @@ defmodule ExCSSCaptcha do
     |> Enum.into(%{})
   end
 
+  System.otp_release()
+  |> String.to_integer()
+  |> Kernel.>=(23)
+  |> if do
+    @aeadtype :aes_256_gcm
+
+    defp crypto_block_encrypt(aeadtype, key, ivec, {aad, plaintext}) do
+      :crypto.crypto_one_time_aead(aeadtype, key, ivec, plaintext, aad, true)
+    end
+
+    defp crypto_block_decrypt(aeadtype, key, ivec, {aad, ciphertext, ciphertag}) do
+      :crypto.crypto_one_time_aead(aeadtype, key, ivec, ciphertext, aad, ciphertag, false)
+    end
+  else
+    @aeadtype :aes_gcm
+
+    defp crypto_block_encrypt(aeadtype, key, ivec, tuple = {_aad, _plaintext}) do
+      :crypto.block_encrypt(aeadtype, key, ivec, tuple)
+    end
+
+    defp crypto_block_decrypt(aeadtype, key, ivec, tuple = {_aad, _ciphertext, _ciphertag}) do
+      :crypto.block_decrypt(aeadtype, key, ivec, tuple)
+    end
+  end
+
   # TODO: move this to defaults/config
   @separator "/"
   @expires_in 300 # in seconds
@@ -94,14 +119,14 @@ defmodule ExCSSCaptcha do
   @pepper :crypto.strong_rand_bytes(24) # (re)generated at compile time
   def encrypt(content) do
     iv = :crypto.strong_rand_bytes(32)
-    {ct, tag} = :crypto.block_encrypt(:aes_gcm, @key, iv, {@algorithm, content})
+    {ct, tag} = crypto_block_encrypt(@aeadtype, @key, iv, {@algorithm, content})
     Base.encode16(iv <> tag <> ct)
   end
 
   def decrypt(payload) do
     with(
       <<iv::binary-32, tag::binary-16, ct::binary>> <- Base.decode16!(payload),
-      data when data != :error <- :crypto.block_decrypt(:aes_gcm, @key, iv, {@algorithm, ct, tag})
+      data when data != :error <- crypto_block_decrypt(@aeadtype, @key, iv, {@algorithm, ct, tag})
     ) do
       {:ok, data}
     else
