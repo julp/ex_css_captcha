@@ -1,5 +1,5 @@
 defmodule ExCSSCaptcha.Renderer do
-  @callback render(form :: Phoenix.HTML.safe(), signature :: String.t(), html :: Phoenix.HTML.safe(), css :: Phoenix.HTML.safe()) :: Phoenix.HTML.safe()
+  @callback render(form :: Phoenix.HTML.Form.t, signature :: String.t, html :: Phoenix.HTML.safe, css :: Phoenix.HTML.safe) :: Phoenix.HTML.safe
 
   defmacro __using__(_opts) do
     quote do
