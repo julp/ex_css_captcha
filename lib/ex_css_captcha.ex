@@ -246,4 +246,7 @@ defmodule ExCSSCaptcha do
         Ecto.Changeset.add_error(changeset, :captcha, reason)
     end
   end
+
+  # at least one of the params captcha/captcha2 is missing
+  def validate_captcha(changeset = %Ecto.Changeset{}), do: Ecto.Changeset.add_error(changeset, :captcha, invalid_captcha_message())
 end
