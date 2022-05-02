@@ -70,7 +70,7 @@ defmodule ExCSSCaptcha do
     }
 
     @doc ~S"""
-    TODO
+    TODO (doc)
     """
     @spec merge(config :: t, options :: Keyword.t) :: t
     def merge(config = %__MODULE__{}, _options) do
@@ -159,28 +159,28 @@ defmodule ExCSSCaptcha do
   end
 
   def encrypt_and_sign(challenge) do
-    content = [@pepper, challenge, DateTime.utc_now()]
-    |> Enum.join(@separator)
-    hash = content
-    |> digest()
+    content = [@pepper, challenge, DateTime.utc_now()] |> Enum.join(@separator)
+    hash = content |> digest()
+
     [content, hash]
     |> Enum.join(@separator)
     |> encrypt()
   end
 
   @length 32
-  [captcha, captcha2] = 1..2
-  |> Enum.map(
-    fn _ ->
-      @length
-      |> :crypto.strong_rand_bytes()
-      |> Base.url_encode64()
-      |> binary_part(0, @length)
-    end
-  )
+  [captcha, captcha2] =
+    1..2
+    |> Enum.map(
+      fn _ ->
+        @length
+        |> :crypto.strong_rand_bytes()
+        |> Base.url_encode64()
+        |> binary_part(0, @length)
+      end
+    )
 
   @doc ~S"""
-  TODO
+  TODO (doc)
   """
   def bypass_captcha(params) do
     params
@@ -205,7 +205,7 @@ defmodule ExCSSCaptcha do
   end
 
   @doc ~S"""
-  TODO
+  TODO (doc)
   """
   @spec validate_captcha(user_input :: String.t, private_data :: String.t) :: :ok | {:error, String.t}
   def validate_captcha(unquote(captcha), unquote(captcha2)), do: :ok
@@ -214,9 +214,7 @@ defmodule ExCSSCaptcha do
     with(
       {:ok, data} when is_binary(data) <- decrypt(private_data),
       [@pepper, ^user_input, datetime, hash] <- String.split(data, @separator),
-      ^hash <- [@pepper, user_input, datetime]
-      |> Enum.join(@separator)
-      |> digest(),
+      ^hash <- [@pepper, user_input, datetime] |> Enum.join(@separator) |> digest(),
       {:ok, datetime, 0} <- DateTime.from_iso8601(datetime)
     ) do
       if DateTime.diff(DateTime.utc_now(), datetime) > @expires_in do
@@ -234,10 +232,11 @@ defmodule ExCSSCaptcha do
   end
 
   @doc ~S"""
-  TODO
+  TODO (doc)
   """
   @spec validate_captcha(changeset :: Ecto.Changeset.t) :: Ecto.Changeset.t
   def validate_captcha(changeset = %Ecto.Changeset{valid?: false}), do: changeset
+
   def validate_captcha(changeset = %Ecto.Changeset{params: %{"captcha" => user_input, "captcha2" => private_data}}) do
     case validate_captcha(user_input, private_data) do
       :ok ->

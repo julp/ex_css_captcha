@@ -3,7 +3,7 @@ defmodule ExCSSCaptcha.DefaultRenderer do
   import ExCSSCaptcha.Gettext
 
   #for color <- ~W[red blue green light dark] do
-    #ExCSSCaptcha.Gettext.dgettext_noop("excsscaptcha", unquote(color))
+    #ExCSSCaptcha.Gettext.dgettext_noop("ex_css_captcha", unquote(color))
   #end
 
   @impl ExCSSCaptcha.Renderer

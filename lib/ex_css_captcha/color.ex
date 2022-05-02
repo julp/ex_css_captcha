@@ -61,7 +61,9 @@ defmodule ExCSSCaptcha.Color do
 
   def format(color = %__MODULE__{}) do
     {r, g, b} = hsl_to_rgb(color)
-    :io_lib.format('color: #~2.16.0B~2.16.0B~2.16.0B;', [r, g, b])
+
+    'color: #~2.16.0B~2.16.0B~2.16.0B;'
+    |> :io_lib.format([r, g, b])
     |> to_string()
   end
 end
