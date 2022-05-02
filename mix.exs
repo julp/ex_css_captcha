@@ -5,7 +5,7 @@ defmodule ExCSSCaptcha.MixProject do
     [
       app: :ex_css_captcha,
       version: "0.1.0",
-      elixir: "~> 1.7",
+      elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
