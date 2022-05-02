@@ -56,18 +56,35 @@ defmodule ExCSSCaptcha.Challenge do
         list
       length ->
         Range.new(1, length)
-        |> Enum.into(list, fn _ -> ExCSSCaptcha.Table.map(?\s, options.unicode_version) end)
+        |> Enum.reduce(
+          list,
+          fn _, acc ->
+            [ExCSSCaptcha.Table.map(?\s, options.unicode_version) | acc]
+          end
+        )
     end
   end
 
   defp handle_reversed(characters, list, options = %{reversed: true}) do
-    Enum.into(characters, [IO.iodata_to_binary(["#", to_string(options.html_wrapper_id), " { display: flex; flex-direction: row-reverse; justify-content: flex-end; }"]) | list], fn {_char, index} ->
-      IO.iodata_to_binary([
-        "#", to_string(options.html_wrapper_id), " ", to_string(options.html_letter_tag), ":nth-child(",
-        #"0n+",
-        to_string(index + 1), ") { order: ", to_string(options.challenge_length - index), "; }"
-      ])
-    end)
+    Enum.reduce(
+      characters,
+      [IO.iodata_to_binary(["#", to_string(options.html_wrapper_id), " { display: flex; flex-direction: row-reverse; justify-content: flex-end; }"]) | list],
+      fn {_char, index}, acc ->
+        line = IO.iodata_to_binary([
+          "#",
+          to_string(options.html_wrapper_id),
+          " ",
+          to_string(options.html_letter_tag),
+          ":nth-child(",
+          #"0n+",
+          to_string(index + 1),
+          ") { order: ",
+          to_string(options.challenge_length - index),
+          "; }",
+        ])
+        [line | acc]
+      end
+    )
   end
   defp handle_reversed(_characters, list, _options), do: list
 
