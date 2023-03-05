@@ -12,7 +12,7 @@ A really simple (and visual only) captcha engine based on CSS3 and Unicode (elix
 ```elixir
 def deps do
   [
-    {:ex_css_captcha, "~> 0.1.0"}
+    {:ex_css_captcha, "~> 0.1.0"},
   ]
 end
 ```

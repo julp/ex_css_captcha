@@ -18,7 +18,7 @@ defmodule ExCSSCaptcha.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: ~W[logger]a,
     ]
   end
 
