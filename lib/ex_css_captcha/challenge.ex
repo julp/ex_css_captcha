@@ -68,28 +68,30 @@ defmodule ExCSSCaptcha.Challenge do
     end
   end
 
-  defp handle_reversed(characters, list, options = %{reversed: true}) do
+  defp handle_reversed(lines, characters, options = %{reversed: true}) do
     Enum.reduce(
       characters,
-      [IO.iodata_to_binary(["#", to_string(options.html_wrapper_id), " { display: flex; flex-direction: row-reverse; justify-content: flex-end; }"]) | list],
+      [IO.iodata_to_binary(["#", to_string(options.html_wrapper_id), " { display: flex; flex-direction: row-reverse; justify-content: flex-end; }"]) | lines],
       fn {_char, index}, acc ->
-        line = IO.iodata_to_binary([
-          "#",
-          to_string(options.html_wrapper_id),
-          " ",
-          to_string(options.html_letter_tag),
-          ":nth-child(",
-          #"0n+",
-          to_string(index + 1),
-          ") { order: ",
-          to_string(options.challenge_length - index),
-          "; }",
-        ])
+        line =
+          IO.iodata_to_binary([
+            "#",
+            to_string(options.html_wrapper_id),
+            " ",
+            to_string(options.html_letter_tag),
+            ":nth-child(",
+            #"0n+",
+            to_string(index + 1),
+            ") { order: ",
+            to_string(options.challenge_length - index),
+            "; }",
+          ])
+
         [line | acc]
       end
     )
   end
-  defp handle_reversed(_characters, list, _options), do: list
+  defp handle_reversed(lines, _characters, _options), do: lines
 
   defp set_color(:significant, %{significant_characters_color: nil}), do: []
   defp set_color(:significant, %{significant_characters_color: color}) do
@@ -113,6 +115,7 @@ defmodule ExCSSCaptcha.Challenge do
   """
   def render(form, challenge = %__MODULE__{}, options \\ []) do
     use Phoenix.HTML
+
     options = options |> ExCSSCaptcha.options()
     characters = challenge.digits |> Enum.with_index()
 
@@ -149,8 +152,8 @@ defmodule ExCSSCaptcha.Challenge do
       |> Enum.map(fn {:ok, v} -> v end)
 
     css =
-      characters
-      |> handle_reversed(lines, options)
+      lines
+      |> handle_reversed(characters, options)
       |> Enum.shuffle()
       |> Enum.join("\n")
 

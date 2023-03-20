@@ -56,6 +56,7 @@ defmodule ExCSSCaptcha.Color do
       l + s - l * s
     end
     m1 = l * 2 - m2
+
     {hue_to_rgb(m1, m2, color.h + 120), hue_to_rgb(m1, m2, color.h), hue_to_rgb(m1, m2, color.h - 120)}
   end
 

@@ -1,27 +1,66 @@
 defmodule ExCSSCaptcha do
+  # generation options
+  @default_alphabet ~C[23456789abcdefghjkmnpqrstuvwxyz]
+  @default_noise_length 2
+  @default_challenge_length 8
+  @default_fake_characters_length 2
+  @default_unicode_version :ascii
+
+  # display options
+  @default_reversed false
+  @default_fake_characters_color nil
+  @default_significant_characters_color nil
+  @default_html_wrapper_id :captcha
+  @default_html_letter_tag :span
+  @default_html_wrapper_tag :div
+  @default_fake_characters_style "display: none"
+  @default_significant_characters_style ""
+
   @moduledoc """
   Documentation for ExCSSCaptcha.
+
+  Options for challenge generation:
+
+    * alphabet (charlist, default: #{inspect(@default_alphabet)}): subset of ASCII alphanumeric characters from which to pick characters to generate the challenge (eg: define it to `~C[0123456789]` to only use digits)
+    * noise_length (integer, default: #{inspect(@default_noise_length)}): define the maximum number of noisy characters to add before and after each character composing the challenge. A random number of whitespaces (may be punctuations in the future) will be picked between `0` and this maximum (`0` for none)
+    * challenge_length (integer, default: #{inspect(@default_challenge_length)}): challenge length
+    * fake_characters_length (integer, default: #{inspect(@default_fake_characters_length)}): number of irrelevant characters added to the challenge when displayed (`0` to disable)
+    * unicode_version (atom, default: #{inspect(@default_unicode_version)}): set maximum version of Unicode from which to pick up code points (redefine it with one the "constants" `:unicode_1_1_0`, `:unicode_2_0_0`, `:unicode_3_0_0`, `:unicode_3_1_0`, `:unicode_3_2_0`, `:unicode_4_0_0`, `:unicode_4_1_0`, `:unicode_5_0_0`, `:unicode_5_1_0`, `:unicode_5_2_0`, `:unicode_6_0_0`). `:ascii` can be used here to not use Unicode.
+
+  Display options:
+
+    * reversed (boolean, default: #{inspect(@default_reversed)}): if `true` inverse order of displayed element
+    * fake_characters_color (atom, default: #{inspect(@default_fake_characters_color)}): one "constant" among `:red`, `:green`, `:blue`, `:light`, `:dark` to generate a random nuance of the given color
+    * significant_characters_color (atom, default: #{inspect(@default_significant_characters_color)}): one "constant" among `:red`, `:green`, `:blue`, `:light`, `:dark` to generate a random nuance of the given color
+    * html_wrapper_id (atom or binary, default: #{inspect(@default_html_wrapper_id)}): HTML/CSS ID of container element (remember to keep unique for your entire generated webpage)
+    * html_letter_tag (atom or binary, default: #{inspect(@default_alphabet)}): HTML tag to display challenge (and fake) characters
+    * html_wrapper_tag (atom or binary, default: #{inspect(@default_html_wrapper_tag)}): HTML tag name of container element
+    * fake_characters_style (binary, default: #{inspect(@default_fake_characters_style)}): fragment of CSS code to append to irrelevant characters of the challenge
+    * significant_characters_style (binary, default: #{inspect(@default_significant_characters_style)}): fragment of CSS code to append to significant characters of the challenge
+    * csp_nonce (binary or nil for none, default: `nil`): if not `nil`, the value to set as nonce attribute for the `<style>` tag to comply with your Content-Security-Policy
   """
 
-  import ExCSSCaptcha.Gettext
+  require ExCSSCaptcha.Gettext
 
   @defaults [
-    alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
-    reversed: false,
-    noise_length: 2,
-    challenge_length: 8,
-    fake_characters_length: 2,
-    fake_characters_color: nil,
-    significant_characters_color: nil,
-    html_wrapper_id: :captcha,
-    html_letter_tag: :span,
-    html_wrapper_tag: :div,
-    unicode_version: :ascii,
-    fake_characters_style: "display: none",
-    significant_characters_style: "",
+    alphabet: @default_alphabet,
+    reversed: @default_reversed,
+    noise_length: @default_noise_length,
+    challenge_length: @default_challenge_length,
+    fake_characters_length: @default_fake_characters_length,
+    fake_characters_color: @default_fake_characters_color,
+    significant_characters_color: @default_significant_characters_color,
+    html_wrapper_id: @default_html_wrapper_id,
+    html_letter_tag: @default_html_letter_tag,
+    html_wrapper_tag: @default_html_wrapper_tag,
+    unicode_version: @default_unicode_version,
+    fake_characters_style: @default_fake_characters_style,
+    significant_characters_style: @default_significant_characters_style,
     renderer: ExCSSCaptcha.DefaultRenderer,
+    csp_nonce: nil,
   ]
 
+if false do
   defmodule Config do
     defstruct alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
       reversed: false,
@@ -37,6 +76,7 @@ defmodule ExCSSCaptcha do
       fake_characters_style: "display: none",
       significant_characters_style: "",
       renderer: ExCSSCaptcha.DefaultRenderer,
+      csp_nonce: nil,
       separator: "/",
       expires_in: 300, # in seconds
       algorithm: "AES128GCM",
@@ -46,12 +86,14 @@ defmodule ExCSSCaptcha do
     @type color :: nil | :red | :green | :blue | :dark | :light
 
     @type t :: %__MODULE__{
+      # generation options
       alphabet: nonempty_charlist,
-      reversed: nil | boolean,
       # NOTE: non_neg_integer includes 0 but not pos_integer
       noise_length: non_neg_integer,
       challenge_length: pos_integer,
       fake_characters_length: non_neg_integer,
+      # display options
+      reversed: nil | boolean,
       fake_characters_color: color,
       significant_characters_color: color,
       html_wrapper_id: atom,
@@ -61,7 +103,8 @@ defmodule ExCSSCaptcha do
       fake_characters_style: nil | String.t,
       significant_characters_style: nil | String.t,
       renderer: module,
-      # ----------
+      csp_nonce: nil | String.t,
+      # display/(en|de)coding options
       separator: String.t,
       expires_in: pos_integer,
       algorithm: String.t,
@@ -78,6 +121,7 @@ defmodule ExCSSCaptcha do
       config
     end
   end
+end
 
   def options(options) do
     @defaults
@@ -111,12 +155,12 @@ defmodule ExCSSCaptcha do
     end
   end
 
-  # TODO: move this to defaults/config
   @separator "/"
   @expires_in 300 # in seconds
   @algorithm "AES128GCM"
   @key :crypto.strong_rand_bytes(32) # (re)generated at compile time
   @pepper :crypto.strong_rand_bytes(24) # (re)generated at compile time
+
   def encrypt(content) do
     iv = :crypto.strong_rand_bytes(32)
     {ct, tag} = crypto_block_encrypt(@aeadtype, @key, iv, {@algorithm, content})
@@ -153,6 +197,9 @@ defmodule ExCSSCaptcha do
     :rand.uniform(n2 - n1 + 1) + n1 - 1
   end
 
+  @doc ~S"""
+  Generate a random number as [n1;n2]
+  """
   @spec random(n :: Range.t) :: integer
   def random(n1..n2) do
     random(n1, n2)
@@ -180,7 +227,7 @@ defmodule ExCSSCaptcha do
     )
 
   @doc ~S"""
-  TODO (doc)
+  To bypass captchas in tests
   """
   def bypass_captcha(params) do
     params
@@ -193,7 +240,7 @@ defmodule ExCSSCaptcha do
   """
   @spec invalid_captcha_message() :: String.t
   def invalid_captcha_message do
-    dgettext("ex_css_captcha", "is invalid")
+    ExCSSCaptcha.Gettext.dgettext("ex_css_captcha", "is invalid")
   end
 
   @doc ~S"""
@@ -201,7 +248,7 @@ defmodule ExCSSCaptcha do
   """
   @spec expired_captcha_message() :: String.t
   def expired_captcha_message do
-    dgettext("ex_css_captcha", "has expired")
+    ExCSSCaptcha.Gettext.dgettext("ex_css_captcha", "has expired")
   end
 
   @doc ~S"""
@@ -247,5 +294,7 @@ defmodule ExCSSCaptcha do
   end
 
   # at least one of the params captcha/captcha2 is missing
-  def validate_captcha(changeset = %Ecto.Changeset{}), do: Ecto.Changeset.add_error(changeset, :captcha, invalid_captcha_message())
+  def validate_captcha(changeset = %Ecto.Changeset{}) do
+    Ecto.Changeset.add_error(changeset, :captcha, invalid_captcha_message())
+  end
 end
