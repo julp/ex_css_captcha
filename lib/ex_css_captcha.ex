@@ -206,7 +206,13 @@ end
   end
 
   def encrypt_and_sign(challenge) do
-    content = [@pepper, challenge, DateTime.utc_now()] |> Enum.join(@separator)
+    content =
+      [
+        @pepper,
+        challenge,
+        DateTime.utc_now(),
+      ]
+      |> Enum.join(@separator)
     hash = content |> digest()
 
     [content, hash]

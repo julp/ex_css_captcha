@@ -10,8 +10,6 @@ defmodule ExCSSCaptcha.Challenge do
   TODO (doc)
   """
   def create(options \\ []) do
-    #<<i1::unsigned-integer-32, i2::unsigned-integer-32, i3::unsigned-integer-32>> = :crypto.strong_rand_bytes(12)
-    #:rand.seed(:exsplus, {i1, i2, i3})
     options = ExCSSCaptcha.options(options)
     digits =
       Range.new(1, options.challenge_length + options.fake_characters_length)
@@ -124,7 +122,8 @@ defmodule ExCSSCaptcha.Challenge do
       |> Task.async_stream(
         fn {{kind, char}, index} ->
           content =
-            ExCSSCaptcha.Table.map(char, options.unicode_version)
+            char
+            |> ExCSSCaptcha.Table.map(options.unicode_version)
             |> List.wrap()
             |> generate_noise(options)
             |> Enum.reverse()
