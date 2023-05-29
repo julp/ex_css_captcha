@@ -43,9 +43,9 @@ defmodule ExCSSCaptcha.Challenge do
     :io_lib.format('\\~*.16.0B', [char_to_precision(char), char])
   end
 
-  #defp list_prepend(value, list) do
-    #[value | list]
-  #end
+#   defp list_prepend(value, list) do
+#     [value | list]
+#   end
 
   defp generate_noise(list, %{noise_length: 0}), do: list
   defp generate_noise(list, options) do
@@ -108,6 +108,43 @@ defmodule ExCSSCaptcha.Challenge do
   defp set_style(:irrelevant, options), do: options.fake_characters_style || []
   defp set_style(:significant, options), do: options.significant_characters_style || []
 
+  defp challenge_to_css(challenge = %__MODULE__{}, options) do
+    characters = challenge.digits |> Enum.with_index()
+
+    characters
+    |> Enum.map(
+      fn {{kind, char}, index} ->
+       content =
+          ExCSSCaptcha.Table.map(char, options.unicode_version)
+          |> List.wrap()
+          |> generate_noise(options)
+          |> Enum.reverse()
+          |> generate_noise(options)
+          |> Enum.map(&encode_character/1)
+          |> Enum.join()
+
+        #"##{options.html_wrapper_id} #{options.html_letter_tag}:nth-child(#{index + 1}):after { content: \"#{content}\"; #{color} #{options.significant_characters_style} }\n"
+        IO.iodata_to_binary([
+          "#",
+          to_string(options.html_wrapper_id),
+          " ",
+          to_string(options.html_letter_tag),
+          ":nth-child(",
+          to_string(index + 1),
+          "):after { content: \"",
+          content,
+          "\";",
+          set_color(kind, options),
+          set_style(kind, options),
+          "}",
+        ])
+      end
+    )
+    |> handle_reversed(characters, options)
+    |> Enum.shuffle()
+    |> Enum.join("\n")
+  end
+
   @doc ~S"""
   TODO (doc)
   """
@@ -115,48 +152,30 @@ defmodule ExCSSCaptcha.Challenge do
     use Phoenix.HTML
 
     options = options |> ExCSSCaptcha.options()
-    characters = challenge.digits |> Enum.with_index()
 
-    lines =
-      characters
-      |> Task.async_stream(
-        fn {{kind, char}, index} ->
-          content =
-            char
-            |> ExCSSCaptcha.Table.map(options.unicode_version)
-            |> List.wrap()
-            |> generate_noise(options)
-            |> Enum.reverse()
-            |> generate_noise(options)
-            |> Enum.map(&encode_character/1)
-            |> Enum.join()
-
-          #"##{options.html_wrapper_id} #{options.html_letter_tag}:nth-child(#{index + 1}):after { content: \"#{content}\"; #{color} #{options.significant_characters_style} }\n"
-          IO.iodata_to_binary([
-            "#",
-            to_string(options.html_wrapper_id),
-            " ",
-            to_string(options.html_letter_tag),
-            ":nth-child(",
-            to_string(index + 1),
-            "):after { content: \"",
-            content,
-            "\";",
-            set_color(kind, options),
-            set_style(kind, options),
-            "}",
-          ])
-        end
+    html =
+      content_tag(
+        options.html_wrapper_tag,
+        Enum.map(
+          challenge.digits,
+          fn _ ->
+            content_tag(options.html_letter_tag, "")
+          end
+        ),
+        [
+          id: options.html_wrapper_id,
+        ]
       )
-      |> Enum.map(fn {:ok, v} -> v end)
-
     css =
-      lines
-      |> handle_reversed(characters, options)
-      |> Enum.shuffle()
-      |> Enum.join("\n")
+      content_tag(
+        :style,
+        challenge_to_css(challenge, options) |> Phoenix.HTML.raw(),
+        [
+          type: "text/css",
+          nonce: options.csp_nonce,
+        ]
+      )
 
-    html = content_tag(options.html_wrapper_tag, Enum.map(challenge.digits, fn _ -> content_tag(options.html_letter_tag, "") end), id: options.html_wrapper_id)
     options.renderer.render(form, ExCSSCaptcha.encrypt_and_sign(challenge.challenge), html, raw(css))
   end
 end

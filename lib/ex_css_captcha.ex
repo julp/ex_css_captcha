@@ -21,23 +21,23 @@ defmodule ExCSSCaptcha do
 
   Options for challenge generation:
 
-    * alphabet (charlist, default: #{inspect(@default_alphabet)}): subset of ASCII alphanumeric characters from which to pick characters to generate the challenge (eg: define it to `~C[0123456789]` to only use digits)
-    * noise_length (integer, default: #{inspect(@default_noise_length)}): define the maximum number of noisy characters to add before and after each character composing the challenge. A random number of whitespaces (may be punctuations in the future) will be picked between `0` and this maximum (`0` for none)
-    * challenge_length (integer, default: #{inspect(@default_challenge_length)}): challenge length
-    * fake_characters_length (integer, default: #{inspect(@default_fake_characters_length)}): number of irrelevant characters added to the challenge when displayed (`0` to disable)
-    * unicode_version (atom, default: #{inspect(@default_unicode_version)}): set maximum version of Unicode from which to pick up code points (redefine it with one the "constants" `:unicode_1_1_0`, `:unicode_2_0_0`, `:unicode_3_0_0`, `:unicode_3_1_0`, `:unicode_3_2_0`, `:unicode_4_0_0`, `:unicode_4_1_0`, `:unicode_5_0_0`, `:unicode_5_1_0`, `:unicode_5_2_0`, `:unicode_6_0_0`). `:ascii` can be used here to not use Unicode.
+    * alphabet (charlist, default: `#{inspect(@default_alphabet)}`): subset of ASCII alphanumeric characters from which to pick characters to generate the challenge (eg: define it to `~C[0123456789]` to only use digits)
+    * (required for display by CSS) challenge_length (integer, default: `#{inspect(@default_challenge_length)}`): challenge length
+    * fake_characters_length (integer, default: `#{inspect(@default_fake_characters_length)}`): number of irrelevant characters added to the challenge when displayed (`0` to disable)
+    * (required for display by CSS) unicode_version (atom, default: `#{inspect(@default_unicode_version)}`): set maximum version of Unicode from which to pick up code points (redefine it with one the "constants" `:unicode_1_1_0`, `:unicode_2_0_0`, `:unicode_3_0_0`, `:unicode_3_1_0`, `:unicode_3_2_0`, `:unicode_4_0_0`, `:unicode_4_1_0`, `:unicode_5_0_0`, `:unicode_5_1_0`, `:unicode_5_2_0`, `:unicode_6_0_0`). `:ascii` can be used here to not use Unicode.
 
   Display options:
 
-    * reversed (boolean, default: #{inspect(@default_reversed)}): if `true` inverse order of displayed element
-    * fake_characters_color (atom, default: #{inspect(@default_fake_characters_color)}): one "constant" among `:red`, `:green`, `:blue`, `:light`, `:dark` to generate a random nuance of the given color
-    * significant_characters_color (atom, default: #{inspect(@default_significant_characters_color)}): one "constant" among `:red`, `:green`, `:blue`, `:light`, `:dark` to generate a random nuance of the given color
-    * html_wrapper_id (atom or binary, default: #{inspect(@default_html_wrapper_id)}): HTML/CSS ID of container element (remember to keep unique for your entire generated webpage)
-    * html_letter_tag (atom or binary, default: #{inspect(@default_alphabet)}): HTML tag to display challenge (and fake) characters
-    * html_wrapper_tag (atom or binary, default: #{inspect(@default_html_wrapper_tag)}): HTML tag name of container element
-    * fake_characters_style (binary, default: #{inspect(@default_fake_characters_style)}): fragment of CSS code to append to irrelevant characters of the challenge
-    * significant_characters_style (binary, default: #{inspect(@default_significant_characters_style)}): fragment of CSS code to append to significant characters of the challenge
-    * csp_nonce (binary or nil for none, default: `nil`): if not `nil`, the value to set as nonce attribute for the `<style>` tag to comply with your Content-Security-Policy
+    * (CSS) noise_length (integer, default: `#{inspect(@default_noise_length)}`): define the maximum number of noisy characters to add before and after each character composing the challenge. A random number of whitespaces (may be punctuations in the future) will be picked between `0` and this maximum (`0` for none)
+    * (CSS) reversed (boolean, default: `#{inspect(@default_reversed)}`): if `true` inverse order of displayed element
+    * (CSS) fake_characters_color (atom, default: `#{inspect(@default_fake_characters_color)}`): one "constant" among `:red`, `:green`, `:blue`, `:light`, `:dark` to generate a random nuance of the given color
+    * (CSS) significant_characters_color (atom, default: `#{inspect(@default_significant_characters_color)}`): one "constant" among `:red`, `:green`, `:blue`, `:light`, `:dark` to generate a random nuance of the given color
+    * (HTML + CSS) html_wrapper_id (atom or binary, default: `#{inspect(@default_html_wrapper_id)}`): HTML/CSS ID of container element (remember to keep unique for your entire generated webpage)
+    * (HTML + CSS) html_letter_tag (atom or binary, default: `#{inspect(@default_alphabet)}`): HTML tag to display challenge (and fake) characters
+    * (HTML) html_wrapper_tag (atom or binary, default: `#{inspect(@default_html_wrapper_tag)}`): HTML tag name of container element
+    * (CSS) fake_characters_style (binary, default: `#{inspect(@default_fake_characters_style)}`): fragment of CSS code to append to irrelevant characters of the challenge
+    * (CSS) significant_characters_style (binary, default: `#{inspect(@default_significant_characters_style)}`): fragment of CSS code to append to significant characters of the challenge
+    * (CSS) csp_nonce (binary or nil for none, default: `nil`): if not `nil`, the value to set as nonce attribute for the `<style>` tag to comply with your Content-Security-Policy
   """
 
   require ExCSSCaptcha.Gettext
