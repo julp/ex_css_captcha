@@ -25,6 +25,7 @@ Defaults are:
 
 ```
 config :ex_css_captcha,
+  csp_nonce: nil,
   alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
   reversed: false,
   noise_length: 2,
@@ -43,6 +44,7 @@ config :ex_css_captcha,
 
 Where:
 
+* csp_nonce (string): the nonce value used you previously generated for Content Security Policy (if any)
 * alphabet (charlist): subset of ASCII alphanumeric characters from which to pick characters to generate the challenge (eg: define it to `'0123456789'` to only use digits)
 * reversed (boolean): inverse order of displayed element (`false` to disable)
 * noise_length (integer): define the maximum number of noisy characters to add before and after each character composing the challenge. A random number of whitespaces (may be punctuations in the future) will be picked between 0 and this maximum
@@ -60,24 +62,99 @@ Where:
 
 ## Usage
 
-In your template, your form, insert the following to add the needed fields:
+First, generates the captcha from your controller:
 
+```diff
++  @captcha_options [
++    # your custom options
++  ]
+
+   defp render_new(conn, changeset = %Ecto.Changeset{}) do
+     conn
+     |> assign(:changeset, changeset)
++    |> assign(:challenge, ExCSSCaptcha.Challenge.create(@captcha_options))
+     |> render(:new)
+   end
+
+   def new(conn, _params) do
+      render_new(conn, change_foo())
+   end
+
+   def create(conn, _params = %{"foo_params" => foo_params}) do
+     foo_params
+     |> create_foo()
+     |> case do
+       {:ok, foo = %Foo{}} ->
+         conn
+         |> put_flash(:info, "foo successfully created")
+         |> redirect(to: ~p"/")
+         |> halt()
+       {:error, changeset = %Ecto.Changeset{}} ->
+         conn
+         |> render_new(changeset)
+     end
+   end
 ```
-<%= form_for ..., fn f -> %>
+
+Then, in your template, your form, insert the following to add the needed fields:
+
+The old way:
+
+```eex
+<%= form_for @changeset, ..., fn f -> %>
+  ...
 
   <%=
   options = [] # any custom options
   challenge = ExCSSCaptcha.Challenge.create(options)
   ExCSSCaptcha.Challenge.render(f, challenge, options)
   %>
+
+  ...
+<% end %>
 ```
 
-Then, in your changeset function, just add for form validation:
+The new way, with components:
 
+```eex
+<.simple_form
+  :let={f}
+  for={@changeset}
+  ...
+>
+  ...
+
+  <div>
+    <ExCSSCaptcha.Challenge.css_tag
+      challenge={@challenge}
+    />
+    <.label for={@form[:captcha].id}>
+      <%= ExCSSCaptcha.Gettext.dgettext("ex_css_captcha", "Copy the following code in the field below") %>
+    </.label>
+    <ExCSSCaptcha.Challenge.html_tag
+      class="my-8"
+      form={@form}
+      challenge={@challenge}
+    />
+    <.input
+      type="text"
+      field={@form[:captcha]}
+      name={Phoenix.HTML.Form.input_name(@form, :captcha)}
+      autocomplete="off"
+      value=""
+    />
+  </div>
+
+  ...
+</.simple_form>
 ```
-  def changeset(struct, params) do
-    struct
-    ...
-    |> ExCSSCaptcha.validate_captcha()
-  end
+
+Then, in your changeset function, just add the following validation:
+
+```diff
+   def changeset(struct, params) do
+     struct
+     ...
++    |> ExCSSCaptcha.validate_captcha()
+   end
 ```
