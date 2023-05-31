@@ -26,8 +26,9 @@ defmodule ExCSSCaptcha.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.4"},
-      {:gettext, ">= 0.0.0"},
-      {:phoenix_html, "~> 2.14"},
+      {:gettext, "~> 0.20"},
+      {:phoenix_html, "~> 3.0"},
+      {:phoenix_live_view, "~> 0.18"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false},
     ]
   end

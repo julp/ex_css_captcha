@@ -145,6 +145,61 @@ defmodule ExCSSCaptcha.Challenge do
     |> Enum.join("\n")
   end
 
+  if {:module, _module} = Code.ensure_compiled(Phoenix.Component) do
+    use Phoenix.Component
+
+    attr :challenge, __MODULE__, required: true
+    attr :options, :list, default: [] # TODO: removal?
+    def css_tag(assigns) do
+      assigns = assign(assigns, :options, assigns.options |> ExCSSCaptcha.options()) # TODO: removal
+
+      ~H"""
+      <style nonce={@options.csp_nonce} type="text/css">
+        <%= @challenge |> challenge_to_css(@options) |> Phoenix.HTML.raw() %>
+      </style>
+      """
+    end
+
+    attr :challenge, __MODULE__, required: true
+    attr :form, Phoenix.HTML.Form, required: true
+    attr :options, :list, default: [] # TODO: removal?
+    def html_tag(assigns) do
+      assigns = assign(assigns, :options, assigns.options |> ExCSSCaptcha.options()) # TODO: removal
+
+      ~H"""
+      <Phoenix.Component.dynamic_tag name={@options.html_wrapper_tag} id={@options.html_wrapper_id}>
+        <Phoenix.Component.dynamic_tag name={@options.html_letter_tag} :for={_ <- @challenge.digits}>
+          <%# empty %>
+        </Phoenix.Component.dynamic_tag>
+        <input
+          type="hidden"
+          name={Phoenix.HTML.Form.input_name(@form, :captcha2)}
+          value={ExCSSCaptcha.encrypt_and_sign(@challenge.challenge)}
+        />
+      </Phoenix.Component.dynamic_tag>
+      """
+    end
+
+#     attr :challenge, __MODULE__, required: true
+#     attr :form, Phoenix.HTML.Form, required: true
+#     attr :options, :list, default: []
+#     def captcha(assigns) do
+#       assigns = assign(assigns, :options, assigns.options |> ExCSSCaptcha.options())
+#
+#       ~H"""
+#       <ExCSSCaptcha.Challenge.css_tag {assigns}/>
+#       <ExCSSCaptcha.Challenge.html_tag {assigns}/>
+#       <.input
+#         type="text"
+#         name={Phoenix.HTML.Form.input_name(@form, :captcha)}
+#         autocomplete="off"
+#         value=""
+#         label={ExCSSCaptcha.Gettext.dgettext("ex_css_captcha", "Copy the following code in the field below")}
+#       />
+#       """
+#     end
+  end
+
   @doc ~S"""
   TODO (doc)
   """
