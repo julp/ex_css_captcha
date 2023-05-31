@@ -23,7 +23,7 @@ end
 
 Defaults are:
 
-```
+```elixir
 config :ex_css_captcha,
   csp_nonce: nil,
   alphabet: '23456789abcdefghjkmnpqrstuvwxyz',
@@ -100,18 +100,14 @@ Then, in your template, your form, insert the following to add the needed fields
 
 The old way:
 
-```eex
-<%= form_for @changeset, ..., fn f -> %>
-  ...
+```diff
+ <%= form_for @changeset, ..., fn f -> %>
+   ...
 
-  <%=
-  options = [] # any custom options
-  challenge = ExCSSCaptcha.Challenge.create(options)
-  ExCSSCaptcha.Challenge.render(f, challenge, options)
-  %>
++  <%= ExCSSCaptcha.Challenge.render(f, @challenge, options) %>
 
-  ...
-<% end %>
+   ...
+ <% end %>
 ```
 
 The new way, with components:
