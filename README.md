@@ -104,7 +104,7 @@ The old way:
  <%= form_for @changeset, ..., fn f -> %>
    ...
 
-+  <%= ExCSSCaptcha.Challenge.render(f, @challenge, options) %>
++  <%= ExCSSCaptcha.Challenge.render(f, @challenge) %>
 
    ...
  <% end %>
